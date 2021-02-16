@@ -28,7 +28,7 @@ pipeline {
             steps {
                 echo "======= start building image ======="
                 dir ('Dokerfiles') {
-                    sh 'docker build -t bogdanpolishchuk/java_app:latest .'
+                    sh 'docker build -t dariaskydelia/java_app:latest .'
                 }
             }
         }
@@ -36,7 +36,7 @@ pipeline {
             steps {
                 echo "======= start pushing image ======="
                 sh '''
-                docker push bogdanpolishchuk/java_app:latest
+                docker push dariaskydelia/java_app:latest
                 '''
             }
         }
