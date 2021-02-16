@@ -1,0 +1,6 @@
+#---
+# vars file for deployment
+
+#        include_vars:
+#          file: /home/ansible/roles/provisioning/vars/main.yaml
+

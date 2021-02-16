@@ -1,0 +1,32 @@
+---
+# tasks file for deployment
+
+  - name: Print OS version
+    debug: var=ansible_os_family
+
+  - block: #=========Block for DEBIAN============
+
+      - name: Copy proj to folder
+        copy:
+          src: /var/lib/jenkins/jobs/{{ job_name }}/builds/{{ build_number }}/archive/java_app/target/app-ver.{{ build_number }}.jar
+          dest: /home/{{ username }}/for_javabuild/app-ver.{{ build_number }}.jar
+          owner: "{{ username }}"
+          group: "{{ username }}"
+          mode: '0644'
+
+      - name: Run jar-file
+        shell: "nohup java -jar /home/{{ username }}/for_javabuild/app-ver.{{ build_number }}.jar --server.port={{ port }} &"
+        register: status1
+
+      - debug:
+          var: status1
+
+
+      - name: Check util status
+        shell: "ps -aux | grep java"
+        register: status1
+
+      - debug:
+          var: status1.stdout_lines
+
+    when: ansible_os_family == "Debian"

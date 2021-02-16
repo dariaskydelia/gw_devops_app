@@ -1,0 +1,49 @@
+properties([
+    parameters([
+    gitParameter(branch: '',
+                     branchFilter: 'origin/(.*)',
+                     defaultValue: 'master',
+                     description: '',
+                     name: 'BRANCH',
+                     quickFilterEnabled: false,
+                     selectedValue: 'NONE',
+                     sortMode: 'NONE',
+                     tagFilter: '*',
+                     type: 'PT_BRANCH'),
+	string(defaultValue: '8888', description: 'Enter port number in range 8100-9000', name: 'PORT', trim: false),
+        string(defaultValue: 'ci-job', description: 'Enter Job name', name: 'JOBNAME', trim: false),
+        string(defaultValue: '2', description: 'Enter buid number', name: 'BUILDNUM', trim: false)
+    ])
+])
+node {
+
+
+    stage("Clean"){
+        sh "uptime"
+        deleteDir()
+    }
+
+    stage("check ports number"){
+        sh "echo ${params.PORT}"
+        sh "echo ${params.JOBNAME}"
+        sh "echo ${params.BUILDNUM}"
+    }
+ 
+     stage("CHECKOUT"){
+    
+        sh "git clone -b ${params.BRANCH} https://github.com/BogdanPolishchuk/gw_devops_app.git . --depth 1"
+    
+    }
+ 
+     stage("ADD HOSTS"){
+        sh "cp /hosts.txt ./ansible_roles/hosts.txt"
+    }
+ 
+    stage("QA DEPLOY"){
+        sh "ls -lh ; cd ansible_roles&&ansible-playbook qa_service.yml --extra-vars 'port=${params.PORT} job_name=${params.JOBNAME} build_number=${params.BUILDNUM}'"
+    }
+
+    stage("Availability test"){
+        sh "sleep 15 ; curl -I http://172.31.0.108:${params.PORT}"
+    }
+}

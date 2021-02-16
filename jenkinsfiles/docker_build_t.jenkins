@@ -1,0 +1,45 @@
+#!groovy
+//building docker image
+properties([disableConcurrentBuilds()])
+
+pipeline {
+    agent {
+        label 'master'
+    }
+    triggers { pollSCM('* * * * *') }
+    options {
+        buildDiscarder(logRotator(numToKeepStr: '10', artifactNumToKeepStr: '10'))
+        timestamps()
+    }
+    stages {
+        stage("docker login") {
+            steps {
+                echo "======= docker login ======="
+                // username&password in Jenkins global credentials
+                withCredentials([usernamePassword(credentialsIs: 'my_dockerhub', usernamevariable: 'USERNAME', passwordVariable: 'PASSWORD')]) {
+                    sh """
+                    docker login -u $USERNAME -p $PASSWORD
+                    """
+                }
+            }
+        }
+
+        stage("create docker image") {
+            steps {
+                echo "======= start building image ======="
+                dir ('Dokerfiles') {
+                    sh 'docker build -t bogdanpolishchuk/java_app:latest .'
+                }
+            }
+        }
+        stage("docker push") {
+            steps {
+                echo "======= start pushing image ======="
+                sh '''
+                docker push bogdanpolishchuk/java_app:latest
+                '''
+            }
+        }
+
+    }
+}

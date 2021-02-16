@@ -1,0 +1,4 @@
+Don't forget:
+
+provide access for Jenkins to Docker:
+usermod -a G docker jenkins

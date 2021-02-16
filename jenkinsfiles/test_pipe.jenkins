@@ -1,0 +1,94 @@
+properties([
+//    pipelineTriggers([githubPush()]),
+    parameters([
+        gitParameter(branch: '',
+                     branchFilter: 'origin/(.*)',
+                     defaultValue: 'master',
+                     description: '',
+                     name: 'BRANCH',
+                     quickFilterEnabled: false,
+                     selectedValue: 'NONE',
+                     sortMode: 'NONE',
+                     tagFilter: '*',
+                     type: 'PT_BRANCH'),
+	string(defaultValue: '8888', description: 'Enter port number in range 8100-9000', name: 'PORT', trim: false)
+    ])
+])
+node {
+
+//    stage("Checkout SCM") {
+//        checkout scm
+//            checkout([
+//                 $class: 'GitSCM',
+//                 branches: [[name: 'master']],
+//                 userRemoteConfigs: [[
+//                    url: 'https://github.com/BogdanPolishchuk/gw_devops_app.git',
+//                    credentialsId: '',
+//                 ]]
+//                ])
+//    }
+
+    stage("Clean"){
+        sh "uptime"
+        deleteDir()
+    }
+
+    stage("current_path"){
+        sh "pwd"
+    }
+    
+    stage("check ports number"){
+        sh "echo ${params.PORT}"
+    }
+
+    stage("CHECKOUT"){
+    
+      sh "git clone -b ${params.BRANCH} https://github.com/BogdanPolishchuk/gw_devops_app.git . --depth 1"
+    
+    }
+
+    stage("BUILD"){
+        sh "ls -la ; cd java_app&&mvn clean install"
+    }
+    
+    stage("JOB NAME"){
+        sh "echo 'job_name: ${JOB_NAME}'"
+    }
+    
+    stage("UPLOAD ARTIFACT"){
+        archiveArtifacts artifacts: 'java_app/target/*.jar', onlyIfSuccessful: true
+    }
+
+    stage("RENAME"){
+        sh "cd /var/lib/jenkins/jobs/${JOB_NAME}/builds/${BUILD_NUMBER}/archive/java_app/target/ ; mv spring-boot-sample-web-ui-2.2.6.RELEASE.jar app-ver.${BUILD_NUMBER}.jar"
+    }
+
+    stage("PWD"){
+        sh "pwd"
+    }
+
+    stage("BUILD Number to VARs"){
+        sh "echo '    build_number: ${BUILD_NUMBER}' >> ./ansible_roles/group_vars/all.yml"
+    }
+    
+    stage("JOB Name to VARs"){
+        sh "echo '    job_name: ${JOB_NAME}' >> ./ansible_roles/group_vars/all.yml"
+    }
+    
+    stage("CHECK FILE"){
+        sh "cat ./ansible_roles/group_vars/all.yml"
+    }
+
+    stage("ADD HOSTS"){
+        sh "cp /hosts.txt ./ansible_roles/hosts.txt"
+    }
+
+    stage("CI DEPLOY"){
+        sh "ls -lh ; cd ansible_roles&&ansible-playbook service.yml --extra-vars 'port=${params.PORT}'"
+    }
+
+    stage("Availability test"){
+        sh "sleep 15 ; curl -I http://172.31.11.58:${params.PORT}"
+    }
+}
+	

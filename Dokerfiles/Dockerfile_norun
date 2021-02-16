@@ -1,0 +1,12 @@
+FROM ubuntu:latest
+LABEL maintainer="KB"
+RUN apt-get update && apt-get upgrade -y && \
+apt-get install -y openjdk-8-jdk maven git
+RUN mkdir git_proj
+WORKDIR /git_proj
+RUN git clone https://github.com/dariaskydelia/test_app.git
+WORKDIR /git_proj/gw_devops_app
+RUN mvn clean install
+WORKDIR /git_proj/test_app/target
+#CMD ["java", "-jar", "spring-boot-sample-web-ui-2.2.6.RELEASE.jar", "--server.port=8888"]
+

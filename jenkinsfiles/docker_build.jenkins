@@ -1,0 +1,93 @@
+#!groovy
+//building docker image
+properties([
+    disableConcurrentBuilds(),
+    parameters([
+    	string(defaultValue: '8888', description: 'Enter port number in range 8100-9000', name: 'PORT', trim: false),
+        string(defaultValue: 'ci-job', description: 'Enter Name of Job', name: 'NJOB', trim: false),
+        string(defaultValue: '3', description: 'Enter Number of Build', name: 'NBUID', trim: false),
+        string(defaultValue: 'ci-task', description: 'Enter Name for task definition', name: 'NTASK', trim: false)
+    ])
+])
+
+pipeline {
+    
+    environment {
+        RNAME = "${sh(script:'aws ecr describe-repositories | jq .repositories[0].repositoryName', returnStdout: true).trim()}"
+    }
+    
+    agent {
+        label 'master'
+    }
+    options {
+    buildDiscarder(logRotator(numToKeepStr: '10', artifactNumToKeepStr: '10'))
+    timestamps()
+    }
+    stages {
+        stage("define vars") {
+            steps {
+                echo "======= vars ======="
+                echo "${params.PORT}"
+                echo "${params.NJOB}"
+                echo "${params.NBUID}"
+                echo "${params.NTASK}"
+             }
+        }
+        
+        stage("copy artefact") {
+            steps {
+                echo "======= copy artefact ======="
+                sh "pwd"
+                sh "cp /var/lib/jenkins/jobs/${params.NJOB}/builds/${params.NBUID}/archive/java_app/target/app-ver.${params.NBUID}.jar ./Dokerfiles/app.jar"
+            }
+        }
+        
+       
+        stage("create docker image") {
+            steps {
+                echo "======= start building image ======="
+                dir ('Dokerfiles') {
+                    sh "docker build -t application:v${params.NBUID} ."
+                }
+            }
+        }
+        
+        
+        stage("Tag image & push to repository & create template for task definition") {
+            steps {
+                echo "======= Tag image & push to repository & create template for task definition ======="
+                echo "Repository Name is ${env.RNAME}"
+                script {
+                    def foo = env.RNAME[1..-2] 
+                    sh "docker tag application:v${params.NBUID} 089664509234.dkr.ecr.us-east-2.amazonaws.com/${foo}:v${params.NBUID}"
+                    sh "docker push 089664509234.dkr.ecr.us-east-2.amazonaws.com/${foo}:v${params.NBUID}"
+                    dir ('template') {
+                        sh "./test ${params.NTASK} ${params.NBUID} ${params.PORT} ${foo} > template.json"
+                        sh "ls -la"
+                        sh "cat template.json"
+                    }
+                }
+            }
+        }
+        
+        stage("create task definition") {
+            steps {
+                echo "======= create task definition======="
+                sh "pwd"
+                dir ('template') {
+                    sh "aws ecs register-task-definition --cli-input-json file://template.json"
+                }
+                sh "aws ecs list-task-definitions"
+            }
+        }
+        
+        stage("run task in cluster as task") {
+            steps {
+                echo "======= run task in cluster as task ======="
+                sh "aws ecs run-task --cluster manual-cluster --task-definition ${params.NTASK} --launch-type EC2 --count 1"
+            }
+        }
+        
+        
+    }
+}

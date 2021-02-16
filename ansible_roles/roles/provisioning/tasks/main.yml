@@ -1,0 +1,54 @@
+---
+# tasks file for provisioning
+
+  - name: Check Java
+    shell: java -version
+    register: var1
+    ignore_errors: yes
+
+  - debug:
+      var: var1.rc
+
+  - block: #==check Java version==
+
+      - name: APT repository
+        apt:
+          update_cache: yes
+
+    when: var1.rc == 127
+
+  - name: Print OS version
+    become: yes
+    debug: var=ansible_os_family
+
+  - block: #=========Block for DEBIAN============
+
+      - name: create System User
+        user:
+          name: "{{ username }}"
+          password: "$6$mysecretsalt$qJbapG68nyRab3gxvKWPUcs2g3t0oMHSHMnSKecYNpSi3CuZm.GbBqXO8BE6EI6P1JUefhA0qvD7b5LSh./PU1"          
+          shell: /bin/bash
+          groups: root
+          append: yes
+
+      - name: Install Java8 for Debian
+        apt: name=openjdk-8-jdk state=latest
+
+      - name: check Java version
+        shell: java -version
+        register: rez
+
+      - debug:
+          var: rez.stderr_lines
+
+      - name: Create project folder
+        file:
+          path: /home/{{ username }}/for_javabuild
+          state: directory
+          owner: "{{ username }}"
+          group: "{{ username }}"
+          mode: '0755'
+
+
+    when: ansible_os_family == "Debian"
+
