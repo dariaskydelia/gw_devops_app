@@ -16,7 +16,7 @@ pipeline {
             steps {
                 echo "======= docker login ======="
                 // username&password in Jenkins global credentials
-                withCredentials([usernamePassword(credentialsIs: 'my_dockerhub', usernamevariable: 'USERNAME', passwordVariable: 'PASSWORD')]) {
+                withCredentials([usernamePassword(credentialsId: 'my_dockerhub', usernamevariable: 'USERNAME', passwordVariable: 'PASSWORD')]) {
                     sh """
                     docker login -u $USERNAME -p $PASSWORD
                     """
