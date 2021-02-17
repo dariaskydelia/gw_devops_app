@@ -43,7 +43,7 @@ node {
 
     stage("CHECKOUT"){
     
-      sh "git clone -b ${params.BRANCH} https://github.com/BogdanPolishchuk/gw_devops_app.git . --depth 1"
+      sh "git clone -b ${params.BRANCH} https://github.com/dariaskydelia/gw_devops_app.git . --depth 1"
     
     }
 
@@ -83,12 +83,12 @@ node {
         sh "cp /hosts.txt ./ansible_roles/hosts.txt"
     }
 
-    stage("CI DEPLOY"){
-        sh "ls -lh ; cd ansible_roles&&ansible-playbook service.yml --extra-vars 'port=${params.PORT}'"
-    }
+    // stage("CI DEPLOY"){
+    //    sh "ls -lh ; cd ansible_roles&&ansible-playbook service.yml --extra-vars 'port=${params.PORT}'"
+    //}
 
-    stage("Availability test"){
-        sh "sleep 15 ; curl -I http://172.31.11.58:${params.PORT}"
-    }
+    // stage("Availability test"){
+    //    sh "sleep 15 ; curl -I http://172.31.11.58:${params.PORT}"
+    //}
 }
 	
