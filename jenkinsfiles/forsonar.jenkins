@@ -7,7 +7,7 @@ pipeline {
             steps {
                 cleanWs()
                 git branch: 'master',
-                    url: 'https://github.com/BogdanPolishchuk/gw_devops_app.git'
+                    url: 'https://github.com/dariaskydelia/gw_devops_app.git'
             }
         }
 
@@ -17,7 +17,7 @@ pipeline {
 
         stage('build artefact') {
             steps {
-               git url: 'https://github.com/BogdanPolishchuk/gw_devops_app.git'
+               git url: 'https://github.com/dariaskydelia/gw_devops_app.git'
                withMaven {
                    sh "mvn clean install"
                }
