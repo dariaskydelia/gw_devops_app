@@ -11,8 +11,10 @@ pipeline {
                     url: 'https://github.com/dariaskydelia/gw_devops_app'
             }
         }
-
-        stage('build artefact') {
+    stage("current_path"){
+        sh "pwd"
+        
+    stage('build artefact') {
             steps {
                git url: 'https://github.com/dariaskydelia/gw_devops_app'
                withMaven {
