@@ -1,4 +1,3 @@
-
 pipeline {
 
     agent any
@@ -8,11 +7,22 @@ pipeline {
             steps {
                 cleanWs()
                 git branch: 'master',
-                    url: 'https://github.com/dariaskydelia/gw_devops_app'
+                    url: 'https://github.com/BogdanPolishchuk/gw_devops_app.git'
             }
         }
-    stage("current_path"){
-        sh "pwd"
+
+        stage("current_path"){
+           sh "pwd"
     }
-}
+
+        stage('build artefact') {
+            steps {
+               git url: 'https://github.com/BogdanPolishchuk/gw_devops_app.git'
+               withMaven {
+                   sh "mvn clean install"
+               }
+               
+            }
+        }
+    }
 }
