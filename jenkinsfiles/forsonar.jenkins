@@ -14,14 +14,13 @@ pipeline {
     stage("current_path"){
         sh "pwd"
         
-    stage('build artefact') {
+   /* stage('build artefact') {
             steps {
                git url: 'https://github.com/dariaskydelia/gw_devops_app'
                withMaven {
                    sh "mvn clean install"
                }
-               
             }
-        }
+        } */
     }
 }
