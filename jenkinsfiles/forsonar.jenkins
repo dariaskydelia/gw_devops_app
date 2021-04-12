@@ -10,19 +10,18 @@ pipeline {
                     url: 'https://github.com/dariaskydelia/gw_devops_app.git'
             }
         }
-
-        stage("current_path"){
-           sh "pwd"
-    }
-
-        stage('build artefact') {
-            steps {
-               git url: 'https://github.com/dariaskydelia/gw_devops_app.git'
-               withMaven {
-                   sh "mvn clean install"
-               }
-               
-            }
-        }
+         stage('pwd') {
+             steps {
+             sh "pwd"
+             }
+         }
+          stage('build artefact') {
+             steps {
+                  git url: 'https://github.com/dariaskydelia/gw_devops_app.git'
+                  withMaven {
+                   sh "cd ./java_app&&mvn clean install&&pwd"
+                  }
+             }
+          }
     }
 }
